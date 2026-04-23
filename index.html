@@ -2,62 +2,78 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My ML Model</title>
+    <title>Hand Gesture Recognition</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; background: #f0f0f0; }
+        h1 { color: #333; }
+        #webcam-container { margin: 20px auto; }
+        #label-container div {
+            font-size: 18px;
+            padding: 8px;
+            margin: 5px auto;
+            width: 300px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        button {
+            padding: 10px 25px;
+            font-size: 16px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
+    <h1>🖐️ Hand Gesture Recognition</h1>
+    <p>Classify: Open Hand | Fist | Pointing | Partial Close</p>
+    <button type="button" onclick="init()">Start Webcam</button>
+    <div id="webcam-container"></div>
+    <div id="label-container"></div>
 
-<h1>My ML Model</h1>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
+    <script>
+        // 🔁 REPLACE THIS with your own Teachable Machine model URL
+        const URL = "https://teachablemachine.withgoogle.com/models/nbas2mI-i/";
 
-<button onclick="init()">Start</button>
+        let model, webcam, labelContainer, maxPredictions;
 
-<div id="webcam-container"></div>
-<div id="label-container"></div>
+        async function init() {
+            const modelURL = URL + "model.json";
+            const metadataURL = URL + "metadata.json";
+            model = await tmImage.load(modelURL, metadataURL);
+            maxPredictions = model.getTotalClasses();
 
-<!-- Libraries -->
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
-<script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest"></script>
+            webcam = new tmImage.Webcam(300, 300, true);
+            await webcam.setup();
+            await webcam.play();
+            window.requestAnimationFrame(loop);
 
-<script>
-const URL = "https://teachablemachine.withgoogle.com/models/nbas2mI-i/";
+            document.getElementById("webcam-container").appendChild(webcam.canvas);
+            labelContainer = document.getElementById("label-container");
+            for (let i = 0; i < maxPredictions; i++) {
+                labelContainer.appendChild(document.createElement("div"));
+            }
+        }
 
-let model, webcam, labelContainer, maxPredictions;
+        async function loop() {
+            webcam.update();
+            await predict();
+            window.requestAnimationFrame(loop);
+        }
 
-async function init() {
-    const modelURL = URL + "model.json";
-    const metadataURL = URL + "metadata.json";
-
-    model = await tmImage.load(modelURL, metadataURL);
-    maxPredictions = model.getTotalClasses();
-
-    webcam = new tmImage.Webcam(200, 200, true);
-    await webcam.setup();
-    await webcam.play();
-    window.requestAnimationFrame(loop);
-
-    document.getElementById("webcam-container").appendChild(webcam.canvas);
-
-    labelContainer = document.getElementById("label-container");
-    for (let i = 0; i < maxPredictions; i++) {
-        labelContainer.appendChild(document.createElement("div"));
-    }
-}
-
-async function loop() {
-    webcam.update();
-    await predict();
-    window.requestAnimationFrame(loop);
-}
-
-async function predict() {
-    const prediction = await model.predict(webcam.canvas);
-    for (let i = 0; i < maxPredictions; i++) {
-        const classPrediction =
-            prediction[i].className + ": " + prediction[i].probability.toFixed(2);
-        labelContainer.childNodes[i].innerHTML = classPrediction;
-    }
-}
-</script>
-
+        async function predict() {
+            const prediction = await model.predict(webcam.canvas);
+            for (let i = 0; i < maxPredictions; i++) {
+                const prob = (prediction[i].probability * 100).toFixed(1);
+                labelContainer.childNodes[i].innerHTML =
+                    `${prediction[i].className}: <b>${prob}%</b>`;
+            }
+        }
+    </script>
 </body>
 </html>
