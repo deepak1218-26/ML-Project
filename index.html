@@ -12,12 +12,16 @@
     <!-- Start Button -->
     <button onclick="startModel()">Start</button>
 
-    <!-- JavaScript -->
-    <script>
-        function startModel() {
-            alert("Model started successfully!");
-        }
-    </script>
+    <!-- Webcam + Predictions -->
+    <div id="webcam-container"></div>
+    <div id="label-container"></div>
+
+    <!-- Teachable Machine Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest"></script>
+
+    <!-- Your JavaScript File -->
+    <script src="script.js"></script>
 
 </body>
 </html>
